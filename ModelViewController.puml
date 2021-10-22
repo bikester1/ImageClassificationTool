@@ -1,0 +1,16 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+participant Controller order 2
+participant "Business Logic" as BL order 1
+participant "GUI Element" as GUI order 3
+
+Controller -> GUI: Creates
+GUI -> Controller: Request Data Connection
+Controller -> BL: Creates Needed Objects
+GUI -> Controller: Callback Registration
+GUI -> Controller: Data Update Request
+Controller -> BL: Updates Objects
+Controller -> GUI: Calls Registered Callback on Data Update
+
+@enduml

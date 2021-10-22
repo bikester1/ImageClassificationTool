@@ -1,0 +1,34 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+
+
+abstract "Business Logic"
+abstract Controller
+<> Element_List
+abstract "GUI Element 0" as GUI0
+abstract "GUI Element 1" as GUI1
+
+
+
+
+
+<> DownLeft
+Controller -right- Element_List
+Element_List -down- DownLeft
+Element_List -right- GUI0
+DownLeft -right- GUI1
+
+
+
+
+abstract Controller {
+    __init__()
+    attach( var_name, callback )
+    detach( var_name, callback )
+    make_available( [requested_data_types] ) raises UnavailableBL
+    mediate()
+}
+
+
+@enduml
