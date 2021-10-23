@@ -61,6 +61,9 @@ class TrainingController(Controller):
         self.next_img_button.pressed.connect(self.next_button_pressed)
         
         self.file_dialog = QFileDialog()
+        self.file_dialog.setAcceptMode(QFileDialog.AcceptMode.AcceptSave)
+        self.file_dialog.setFileMode(QFileDialog.FileMode.Directory)
+        self.file_dialog.fileSelected.connect(self.save_nn)
         self.save_nn_button = QPushButton()
         self.save_nn_button.setText("Save NN")
         self.save_nn_button.pressed.connect(self.save_nn_button_pressed)
