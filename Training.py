@@ -27,6 +27,10 @@ class NNModel(Observable):
     # TODO: Implement Base type
     pass
 
+    @abstractmethod
+    def save_model(self, file_path: str):
+        pass
+
 
 class ImageClassifierV01(NNModel):
     
@@ -202,3 +206,6 @@ class ImageClassifierV01(NNModel):
             out[tag] = pred
         
         return out
+    
+    def save_model(self, file_path: str):
+        self.model.save(file_path)
