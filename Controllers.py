@@ -63,7 +63,7 @@ class TrainingController(Controller):
         self.file_dialog = QFileDialog()
         self.save_nn_button = QPushButton()
         self.save_nn_button.setText("Save NN")
-        self.save_nn_button.pressed.connect(self.save_nn)
+        self.save_nn_button.pressed.connect(self.save_nn_button_pressed)
         
         self.layout = QGridLayout()
         self.layout_widgets()
@@ -93,7 +93,12 @@ class TrainingController(Controller):
         self.set_current_image(self.image_tagger.get_next_image())
         self.fit_model()
         
-    def save_nn(self):
+    def save_nn_button_pressed(self):
         self.file_dialog.show()
+    
+    def save_nn(self):
+        file_path = self.file_dialog.selectedFiles()[0]
+        self.model.save_model(file_path)
+        print(f"File Saved {file_path}")
 
 
