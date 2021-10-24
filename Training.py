@@ -30,6 +30,10 @@ class NNModel(Observable):
     @abstractmethod
     def save_model(self, file_path: str):
         pass
+    
+    @abstractmethod
+    def load_model(self, file_path: str):
+        pass
 
 
 class ImageClassifierV01(NNModel):
@@ -209,3 +213,6 @@ class ImageClassifierV01(NNModel):
     
     def save_model(self, file_path: str):
         self.model.save(file_path)
+    
+    def load_model(self, file_path: str):
+        self.model.load_weights(file_path)
