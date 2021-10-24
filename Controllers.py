@@ -45,6 +45,7 @@ class TrainingController(Controller):
         self.model: NNModel = ImageClassifierV01(["duke"], training_set)
         self.model.fit_model(1)
         self.current_image = ImageData(self.image_tagger.get_next_image())
+        self.main_window_widget = QMainWindow()
         
         self.input_text_box = QTextEdit()
         
@@ -68,19 +69,31 @@ class TrainingController(Controller):
         self.save_nn_button.setText("Save NN")
         self.save_nn_button.pressed.connect(self.save_nn_button_pressed)
         
+        self.menu_bar = QMenuBar()
+        self.layout_menu_bar()
+        
         self.layout = QGridLayout()
         self.layout_widgets()
         
         self.main_widget = QWidget()
         self.main_widget.setLayout(self.layout)
-        self.main_widget.show()
+        
+        self.main_window_widget.setCentralWidget(self.main_widget)
+        self.main_window_widget.show()
     
     def layout_widgets(self):
-        self.layout.addWidget(self.img_preview, 1, 1)
-        self.layout.addWidget(self.model_preview, 1, 3)
-        self.layout.addWidget(self.input_text_box, 3, 1, 1, 3)
-        self.layout.addWidget(self.next_img_button, 5, 1)
-        self.layout.addWidget(self.save_nn_button, 5, 3)
+        self.layout.addWidget(self.img_preview, 3, 1)
+        self.layout.addWidget(self.model_preview, 3, 3)
+        self.layout.addWidget(self.input_text_box, 5, 1, 1, 3)
+        self.layout.addWidget(self.next_img_button, 7, 1)
+        self.layout.addWidget(self.save_nn_button, 7, 3)
+    
+    def layout_menu_bar(self):
+        file_menu = self.menu_bar.addMenu("File")
+        file_menu.addAction("Save NN", self.save_nn_button_pressed)
+        file_menu.addAction("Load NN", self.load_nn_button_pressed)
+        
+        self.main_window_widget.setMenuBar(self.menu_bar)
     
     @updates("current_image")
     def set_current_image(self, img: Union[Path, ImageData]):
@@ -99,6 +112,14 @@ class TrainingController(Controller):
     def save_nn_button_pressed(self):
         self.file_dialog.show()
     
+    def load_nn_button_pressed(self):
+        self.file_dialog.show()
+    
+    def save_nn(self):
+        file_path = self.file_dialog.selectedFiles()[0]
+        self.model.save_model(file_path)
+        print(f"File Saved {file_path}")
+        
     def save_nn(self):
         file_path = self.file_dialog.selectedFiles()[0]
         self.model.save_model(file_path)
