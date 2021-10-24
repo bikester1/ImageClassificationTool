@@ -34,6 +34,7 @@ class Controller(Observable):
 class TrainingController(Controller):
     
     def __init__(self):
+        # Business Logic Objects
         self.image_tagger = ImageTagging()
         
         training_set = [
@@ -45,6 +46,8 @@ class TrainingController(Controller):
         self.model: NNModel = ImageClassifierV01(["duke"], training_set)
         self.model.fit_model(1)
         self.current_image = ImageData(self.image_tagger.get_next_image())
+
+        # GUI Objects
         self.main_window_widget = QMainWindow()
         
         self.input_text_box = QTextEdit()
