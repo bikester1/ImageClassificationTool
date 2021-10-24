@@ -64,13 +64,15 @@ class TrainingController(Controller):
         self.next_img_button.setText("Next Image")
         self.next_img_button.pressed.connect(self.next_button_pressed)
         
-        self.file_dialog = QFileDialog()
-        self.file_dialog.setAcceptMode(QFileDialog.AcceptMode.AcceptSave)
-        self.file_dialog.setFileMode(QFileDialog.FileMode.Directory)
-        self.file_dialog.fileSelected.connect(self.save_nn)
-        self.save_nn_button = QPushButton()
-        self.save_nn_button.setText("Save NN")
-        self.save_nn_button.pressed.connect(self.save_nn_button_pressed)
+        # Dialogs
+        self.file_save_dialog = QFileDialog()
+        self.file_save_dialog.setAcceptMode(QFileDialog.AcceptMode.AcceptSave)
+        self.file_save_dialog.setFileMode(QFileDialog.FileMode.Directory)
+        self.file_save_dialog.fileSelected.connect(self.save_nn)
+        self.file_load_dialog = QFileDialog()
+        self.file_load_dialog.setAcceptMode(QFileDialog.AcceptMode.AcceptSave)
+        self.file_load_dialog.setFileMode(QFileDialog.FileMode.Directory)
+        self.file_load_dialog.fileSelected.connect(self.load_nn)
         
         self.menu_bar = QMenuBar()
         self.layout_menu_bar()
@@ -89,7 +91,6 @@ class TrainingController(Controller):
         self.layout.addWidget(self.model_preview, 3, 3)
         self.layout.addWidget(self.input_text_box, 5, 1, 1, 3)
         self.layout.addWidget(self.next_img_button, 7, 1)
-        self.layout.addWidget(self.save_nn_button, 7, 3)
     
     def layout_menu_bar(self):
         file_menu = self.menu_bar.addMenu("File")
@@ -113,19 +114,20 @@ class TrainingController(Controller):
         self.fit_model()
         
     def save_nn_button_pressed(self):
-        self.file_dialog.show()
+        self.file_save_dialog.show()
     
     def load_nn_button_pressed(self):
-        self.file_dialog.show()
+        self.file_load_dialog.show()
     
     def save_nn(self):
-        file_path = self.file_dialog.selectedFiles()[0]
+        file_path = self.file_save_dialog.selectedFiles()[0]
         self.model.save_model(file_path)
         print(f"File Saved {file_path}")
-        
-    def save_nn(self):
-        file_path = self.file_dialog.selectedFiles()[0]
-        self.model.save_model(file_path)
-        print(f"File Saved {file_path}")
+    
+    @updates("model")
+    def load_nn(self, _: int):
+        file_path = self.file_load_dialog.selectedFiles()[0]
+        self.model.load_model(file_path)
+        print(f"File Loaded {file_path}")
 
 

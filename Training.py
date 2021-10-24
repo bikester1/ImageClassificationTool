@@ -213,6 +213,7 @@ class ImageClassifierV01(NNModel):
     
     def save_model(self, file_path: str):
         self.model.save(file_path)
-    
+
+    @updates("model")
     def load_model(self, file_path: str):
-        self.model.load_weights(file_path)
+        self.model = keras.models.load_model(file_path)
