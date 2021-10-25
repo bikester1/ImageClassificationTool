@@ -11,7 +11,7 @@ from keras.activations import leaky_relu, sigmoid
 from tensorflow import optimizers, losses
 from tensorflow.keras import Sequential, layers
 
-from Data import ImageData
+from data import ImageData
 from Protocols import Observable, updates
 
 

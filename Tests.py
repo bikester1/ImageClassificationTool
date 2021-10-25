@@ -1,4 +1,4 @@
-from GUI import *
+from gui import *
 from Protocols import *
 
 from unittest import TestCase

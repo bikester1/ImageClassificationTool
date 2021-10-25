@@ -1,4 +1,4 @@
-from GUI import *
+from gui import *
 from Training import *
 from Protocols import *
 from Tagging import *
