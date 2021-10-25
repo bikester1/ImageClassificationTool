@@ -16,8 +16,8 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install pylint
-        pip install tensorflow==2.6.0
+        pip install -c constraints.txt pylint
+        pip install -c constraints.txt tensorflow==2.6.0
         pip install wand==0.6.7
     - name: Analysing the code with pylint
       run: |
