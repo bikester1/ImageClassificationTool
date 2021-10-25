@@ -1,10 +1,7 @@
-from Hashing import *
-from Training import *
-
-from PyQt6.QtWidgets import *
 from PyQt6.QtGui import *
+from PyQt6.QtWidgets import *
 
-import numpy as np
+from training import *
 
 
 class ImageWidget(QWidget):
