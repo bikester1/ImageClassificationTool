@@ -4,10 +4,9 @@ This module is for holding different neural networks and their logic.
 import datetime
 from abc import abstractmethod
 
-import keras.optimizers
 import numpy as np
 import tensorflow as tf
-from keras.activations import leaky_relu, sigmoid
+from tensorflow.keras.activations import relu, sigmoid
 from tensorflow import optimizers, losses
 from tensorflow.keras import Sequential, layers
 
@@ -168,7 +167,7 @@ class ModelBaseClass(NNModel):
 
     @updates("model")
     def load_model(self, file_path: str):
-        self.model = keras.models.load_model(file_path)
+        self.model = tf.keras.models.load_model(file_path)
 
 
 class ImageClassifierV01(ModelBaseClass):
@@ -191,29 +190,14 @@ class ImageClassifierV01(ModelBaseClass):
                 3,
                 strides=1,
                 padding="same",
-                activation=leaky_relu,
+                activation=relu,
             ),
             layers.Conv2D(
                 10,
                 3,
                 strides=1,
                 padding="same",
-                activation=leaky_relu,
-            ),
-            layers.MaxPool2D(2),
-            layers.Conv2D(
-                10,
-                3,
-                strides=1,
-                padding="same",
-                activation=leaky_relu,
-            ),
-            layers.Conv2D(
-                10,
-                3,
-                strides=1,
-                padding="same",
-                activation=leaky_relu,
+                activation=relu,
             ),
             layers.MaxPool2D(2),
             layers.Conv2D(
@@ -221,18 +205,33 @@ class ImageClassifierV01(ModelBaseClass):
                 3,
                 strides=1,
                 padding="same",
-                activation=leaky_relu,
+                activation=relu,
             ),
             layers.Conv2D(
                 10,
                 3,
                 strides=1,
                 padding="same",
-                activation=leaky_relu,
+                activation=relu,
+            ),
+            layers.MaxPool2D(2),
+            layers.Conv2D(
+                10,
+                3,
+                strides=1,
+                padding="same",
+                activation=relu,
+            ),
+            layers.Conv2D(
+                10,
+                3,
+                strides=1,
+                padding="same",
+                activation=relu,
             ),
             layers.MaxPool2D(16),
             layers.Flatten(),
-            layers.Dense(16, activation=leaky_relu, kernel_regularizer="L2",),
+            layers.Dense(16, activation=relu, kernel_regularizer="L2",),
             layers.Dense(len(self.output_tags), activation=sigmoid,),
         ])
 
