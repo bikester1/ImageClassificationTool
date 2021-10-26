@@ -1,7 +1,7 @@
 from multiprocessing import Pool
 from pathlib import *
 import os
-from FindDuplicates import hash_item
+from find_duplicates import hash_item
 import re
 from functools import partial
 from hashing import *
