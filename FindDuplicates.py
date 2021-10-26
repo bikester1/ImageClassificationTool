@@ -1,4 +1,4 @@
-from Hashing import hash_helper, strategy_map
+from hashing import hash_helper, strategy_map
 from PIL.Image import Image
 from PIL import Image
 from pathlib import Path

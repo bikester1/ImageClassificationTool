@@ -4,7 +4,7 @@ import os
 from FindDuplicates import hash_item
 import re
 from functools import partial
-from Hashing import *
+from hashing import *
 
 
 def all_images() -> dict:

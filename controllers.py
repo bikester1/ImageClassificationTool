@@ -9,7 +9,7 @@ from PyQt6.QtWidgets import QMainWindow, QTextEdit, QPushButton, QFileDialog, QM
     QGridLayout, QWidget
 
 from protocols import Observable, updates
-from Tagging import ImageTagging
+from tagging import ImageTagging
 from data import ImageData
 from gui import ImageWidget, ModelWidget
 from training import NNModel, ImageClassifierV01
