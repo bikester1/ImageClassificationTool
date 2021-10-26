@@ -1,5 +1,5 @@
 from gui import *
-from Protocols import *
+from protocols import *
 
 from unittest import TestCase
 
@@ -20,7 +20,7 @@ class LazyInitTests(TestCase):
         def __init__(self):
             self.ran = 0
         
-        @lazy_init_property
+        @LazyInitProperty
         def test_method_1(self) -> int:
             self.ran += 1
             return 1

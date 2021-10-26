@@ -8,7 +8,7 @@ from typing import TypeVar, Union
 from PyQt6.QtWidgets import QMainWindow, QTextEdit, QPushButton, QFileDialog, QMenuBar, \
     QGridLayout, QWidget
 
-from Protocols import Observable, updates
+from protocols import Observable, updates
 from Tagging import ImageTagging
 from data import ImageData
 from gui import ImageWidget, ModelWidget
@@ -22,12 +22,14 @@ class ClassNotAvailable(Exception):
 
 
 class Controller(Observable):
-    """
-    Base class to define implementation and abstraction for a controller.
+    """Base class to define implementation and abstraction for a controller.
     Controllers create GUI widgets and business logic objects and coordinates
     data between the two.
     """
     # TODO: Implement Base Class
+
+    def __init__(self):
+        super().__default_init_implementation__()
 
     @property
     def data_connections(self) -> list[type]:
@@ -42,8 +44,7 @@ class Controller(Observable):
 
 
 class TrainingController(Controller):
-    """
-    Controller for training and visualizing model.
+    """Controller for training and visualizing model.
     Creates and manages a NN Model to be trained on images.
     """
     def __init__(self):
@@ -102,8 +103,8 @@ class TrainingController(Controller):
         self.main_window_widget.show()
 
     def _layout_widgets(self):
-        """
-        Class method for specifying the layout of widgets.
+        """Class method for specifying the layout of widgets.
+
         :return: None.
         """
         self.layout.addWidget(self.img_preview, 3, 1)
@@ -112,8 +113,8 @@ class TrainingController(Controller):
         self.layout.addWidget(self.next_img_button, 7, 1)
 
     def layout_menu_bar(self):
-        """
-        Class method for specifying the layout of menu bar.
+        """Class method for specifying the layout of menu bar.
+
         :return: None.
         """
         file_menu = self.menu_bar.addMenu("File")
@@ -124,9 +125,9 @@ class TrainingController(Controller):
 
     @updates("current_image")
     def set_current_image(self, img: Union[Path, ImageData]):
-        """
-        Sets the current image attribute and fires an update to observers of
+        """ Sets the current image attribute and fires an update to observers of
         current_image.
+
         :param img: image to be displayed
         :return: None.
         """
@@ -136,39 +137,39 @@ class TrainingController(Controller):
 
     @updates("model")
     def fit_model(self):
-        """
-        Fits the model and fires an update to observers of model.
+        """Fits the model and fires an update to observers of model.
+
         :return: None.
         """
         self.model.fit_model(10)
 
     def next_button_pressed(self):
-        """
-        Called when the next button is pressed in the GUI
+        """Called when the next button is pressed in the GUI
+
         :return: None.
         """
         self.set_current_image(self.image_tagger.get_next_image())
         self.fit_model()
 
     def save_nn_button_pressed(self):
-        """
-        Called when the save nn button is pressed in the GUI.
+        """Called when the save nn button is pressed in the GUI.
         Only opens the dialog menu.
+
         :return: None.
         """
         self.file_save_dialog.show()
 
     def load_nn_button_pressed(self):
-        """
-        Called when the load nn button is pressed in the GUI
+        """Called when the load nn button is pressed in the GUI
         Only opens the dialog menu.
+
         :return: None.
         """
         self.file_load_dialog.show()
 
     def save_nn(self):
-        """
-        Called when a folder is selected for saving nn. Actually saves to disk
+        """Called when a folder is selected for saving nn. Actually saves to disk
+
         :return: None.
         """
         file_path = self.file_save_dialog.selectedFiles()[0]
@@ -177,8 +178,8 @@ class TrainingController(Controller):
 
     @updates("model")
     def load_nn(self, _: int):
-        """
-        Called when a folder is selected for loading nn. Actually loads from disk
+        """Called when a folder is selected for loading nn. Actually loads from disk.
+
         :return: None.
         """
         file_path = self.file_load_dialog.selectedFiles()[0]

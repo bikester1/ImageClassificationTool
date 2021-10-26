@@ -9,7 +9,7 @@ import numpy as np
 from wand.image import Image
 
 from image_preprocessing import load_image_as_512_array
-from Protocols import lazy_init_property
+from protocols import LazyInitProperty
 
 
 class ImageData:
@@ -22,7 +22,7 @@ class ImageData:
         self.img: Image = img
         self.np_array: np.array = np_array
 
-    @lazy_init_property
+    @LazyInitProperty
     def np_array(self) -> np.array:
         """
         Lazy Init version of image as a grayscale np array.

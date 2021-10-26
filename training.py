@@ -1,6 +1,4 @@
-"""
-This module is for holding different neural networks and their logic.
-"""
+"""This module is for holding different neural networks and their logic."""
 import datetime
 from abc import abstractmethod
 
@@ -11,21 +9,22 @@ from tensorflow import optimizers, losses
 from tensorflow.keras import Sequential, layers
 
 from data import ImageData
-from Protocols import Observable, updates
+from protocols import Observable, updates
 
 
 class NNModel(Observable):
-    """
-    NNModel is an abstract interface for all neural
+    """NNModel is an abstract interface for all neural
     network models used for image classification.
     It specifies a load and save function so that models
     can be easily saved to disk and loaded on demand.
     """
 
+    def __init__(self):
+        super().__default_init_implementation__()
+
     @abstractmethod
     def single_prediction(self, img: ImageData) -> dict[str, float]:
-        """
-        Runs a single image through the neural network
+        """Runs a single image through the neural network
         and outputs a dictionary of predicted outputs.
         Output tags depend on initialized tags for the nn.
 
@@ -35,8 +34,7 @@ class NNModel(Observable):
 
     @abstractmethod
     def fit_model(self, epochs: int = 1):
-        """
-        Takes an integer number of epochs to train this NN for.
+        """Takes an integer number of epochs to train this NN for.
         Default is 1 epoch.
 
         :param epochs: Number of epochs to train for.
@@ -45,8 +43,7 @@ class NNModel(Observable):
 
     @abstractmethod
     def save_model(self, file_path: str):
-        """
-        Saves entire model to file_path. Note: this is not the same as saving weights.
+        """Saves entire model to file_path. Note: this is not the same as saving weights.
 
         :param file_path: Path at which to save model.
         :return: None.
@@ -54,8 +51,7 @@ class NNModel(Observable):
 
     @abstractmethod
     def load_model(self, file_path: str):
-        """
-        Loads entire model to file_path. Note: this is not the same as loading weights.
+        """Loads entire model to file_path. Note: this is not the same as loading weights.
 
         :param file_path: Path at which to load model.
         :return: None.
@@ -63,8 +59,7 @@ class NNModel(Observable):
 
 
 class ModelBaseClass(NNModel):
-    """
-    Base implementation of the model interface.
+    """Base implementation of the model interface.
     Most Models will fall in line with this implementation and
     should be purely for configuration
     """
@@ -92,8 +87,7 @@ class ModelBaseClass(NNModel):
         )
 
     def multi_hot_from_tag_set(self, tags: set[str]) -> np.array:
-        """
-        Creates a multi-hot encoded array from a set of tags.
+        """Creates a multi-hot encoded array from a set of tags.
 
         :param tags: Set of tags as strings to create a multi-hot encoded array.
         :return: multi-hot array.
@@ -103,8 +97,7 @@ class ModelBaseClass(NNModel):
 
     @updates("imgs_train", "tags_train", "imgs_validation", "tags_validation")
     def update_training_sets(self):
-        """
-        Updates training arrays after the training set has been updated or replaced.
+        """Updates training arrays after the training set has been updated or replaced.
 
         :return: None.
         """
@@ -120,8 +113,7 @@ class ModelBaseClass(NNModel):
         self._tags_validation = np.array(np_array_tags[-test_size:])
 
     def print_weights(self):
-        """
-        Prints all the weights of the model to the terminal. Used primarily
+        """Prints all the weights of the model to the terminal. Used primarily
         for debugging purposes.
 
         :return: None.
@@ -171,9 +163,7 @@ class ModelBaseClass(NNModel):
 
 
 class ImageClassifierV01(ModelBaseClass):
-    """
-    Model version 1 for image classification.
-    """
+    """Model version 1 for image classification."""
     def __init__(self, output_tags: list[str], image_set: list[(ImageData, list[str])],
                  percent_validation=20):
         super().__init__(output_tags, image_set, percent_validation)
