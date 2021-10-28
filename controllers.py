@@ -54,12 +54,12 @@ class TrainingController(Controller):
 
         training_set = [
             (ImageData(fil), self.image_tagger.tagged_images[fil.name]["Tags"])
-            for fil in self.image_tagger.all_images[:100]
+            for fil in self.image_tagger.all_images
             if fil.name in self.image_tagger.tagged_images
         ]
         print(f"{len(training_set)} images for training")
         self.model: NNModel = ImageClassifierV01(["duke"], training_set)
-        self.model.fit_model(1)
+        self.model.fit_model(1000)
         self.current_image = ImageData(self.image_tagger.get_next_image())
 
         # GUI Objects
