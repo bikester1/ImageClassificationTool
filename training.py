@@ -1,5 +1,6 @@
 """This module is for holding different neural networks and their logic."""
 import datetime
+import random
 from abc import abstractmethod
 
 import numpy as np
@@ -64,7 +65,8 @@ class ModelBaseClass(NNModel):
     should be purely for configuration
     """
     def __init__(self, output_tags: list[str], image_set: list[(ImageData, list[str])],
-                 percent_validation=20, model: Sequential = Sequential()):
+                 percent_validation=20, model: Sequential = Sequential(),
+                 min_training_set_size=5000):
         super().__init__()
         self.output_tags = output_tags
 
@@ -75,6 +77,7 @@ class ModelBaseClass(NNModel):
         self._imgs_validation = np.array([])
         self._tags_train = np.array([])
         self._tags_validation = np.array([])
+        self._min_training_set_size = min_training_set_size
         self.model = model
 
         self.update_training_sets()
@@ -95,6 +98,29 @@ class ModelBaseClass(NNModel):
         print([int(tag in tags) for tag in self.output_tags])
         return np.array([int(tag in tags) for tag in self.output_tags])
 
+    @staticmethod
+    def mix(a: np.array, b: np.array, pct_a: float) -> np.array:
+        ret_arr = np.zeros(shape=np.shape(a))
+        rand = np.random.random(size=np.shape(a)) - pct_a
+        rand = np.ceil(rand)
+        for x, y, out, r in np.nditer([a, b, ret_arr, rand],
+                                      flags=["external_loop", "refs_ok"],
+                                      op_flags=[
+                                          ["readonly"],
+                                          ["readonly"],
+                                          ["writeonly"],
+                                          ["readonly"],
+                                      ]):
+            out[...] = x * r + y * (1 - r)
+        return ret_arr
+
+    @staticmethod
+    def interp(a: list, b: list, pct_a: float) -> np.array:
+        ret_arr = []
+        for x in range(len(a)):
+            ret_arr.append(a[x] * pct_a + b[x] * (1 - pct_a))
+        return ret_arr
+
     @updates("imgs_train", "tags_train", "imgs_validation", "tags_validation")
     def update_training_sets(self):
         """Updates training arrays after the training set has been updated or replaced.
@@ -103,14 +129,23 @@ class ModelBaseClass(NNModel):
         """
         np_array_imgs = [img_dat.np_array / 255 for img_dat, tag in self._training_set]
         np_array_tags = [self.multi_hot_from_tag_set(set(tag)) for _, tag in self._training_set]
+        training_set_imgs = []
+        training_set_tags = []
+        while len(training_set_imgs) < self._min_training_set_size:
+            print(len(training_set_imgs))
+            a = random.randint(0, len(np_array_tags)-1)
+            b = random.randint(0, len(np_array_tags)-1)
+            pct = random.random()
+            training_set_imgs.append(self.mix(np_array_imgs[a], np_array_imgs[b], pct))
+            training_set_tags.append(self.interp(np_array_tags[a], np_array_tags[b], pct))
 
-        test_size = (len(self._training_set) * self._percent_validation) // 100
+        test_size = (len(training_set_imgs) * self._percent_validation) // 100
         test_size -= 1
-        self._imgs_train = np.array(np_array_imgs[:-test_size])
-        self._tags_train = np.array(np_array_tags[:-test_size])
+        self._imgs_train = np.array(training_set_imgs[:-test_size])
+        self._tags_train = np.array(training_set_tags[:-test_size], dtype=np.float32)
 
-        self._imgs_validation = np.array(np_array_imgs[-test_size:])
-        self._tags_validation = np.array(np_array_tags[-test_size:])
+        self._imgs_validation = np.array(training_set_imgs[-test_size:])
+        self._tags_validation = np.array(training_set_tags[-test_size:], dtype=np.float32)
 
     def print_weights(self):
         """Prints all the weights of the model to the terminal. Used primarily
@@ -139,7 +174,6 @@ class ModelBaseClass(NNModel):
             batch_size=100,
             epochs=epochs,
             validation_data=validation_data,
-            callbacks=[self._tensorboard_callback],
         )
         self._model_fit_history.append(history)
         self.print_weights()
@@ -173,8 +207,6 @@ class ImageClassifierV01(ModelBaseClass):
             layers.experimental.preprocessing.Normalization(),
             layers.experimental.preprocessing.RandomFlip('horizontal'),
             layers.experimental.preprocessing.RandomRotation(0.5),
-            layers.experimental.preprocessing.RandomZoom((0.3, -0.3), (0.3, -0.3)),
-            layers.MaxPool2D(2),
             layers.Conv2D(
                 10,
                 3,
@@ -221,7 +253,7 @@ class ImageClassifierV01(ModelBaseClass):
             ),
             layers.MaxPool2D(16),
             layers.Flatten(),
-            layers.Dense(16, activation=relu, kernel_regularizer="L2",),
+            layers.Dense(16, activation=relu,),
             layers.Dense(len(self.output_tags), activation=sigmoid,),
         ])
 
