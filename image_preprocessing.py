@@ -16,8 +16,8 @@ def load_image(file: Path) -> Image:
     """
     img = Image(filename=file)
     img.type = "grayscale"
-    width = 512
-    height = 512
+    width = 256
+    height = 256
     img.transform(resize=f"{width}x{height}")
 
     border_width = (width + 2 - img.width) // 2
@@ -29,7 +29,7 @@ def load_image(file: Path) -> Image:
     return img
 
 
-def load_image_as_512_array(file: Path) -> np.array:
+def load_image_as_256_array(file: Path) -> np.array:
     """
     Loads file path as 512x512x1 np array.
     Closes Wand Image of file to save memory and only maintain the np array version

@@ -169,7 +169,7 @@ class ImageClassifierV01(ModelBaseClass):
         super().__init__(output_tags, image_set, percent_validation)
 
         self.model = Sequential([
-            layers.Input(shape=(512, 512, 1)),
+            layers.Input(shape=(256, 256, 1)),
             layers.experimental.preprocessing.Normalization(),
             layers.experimental.preprocessing.RandomFlip('horizontal'),
             layers.experimental.preprocessing.RandomRotation(0.5),
