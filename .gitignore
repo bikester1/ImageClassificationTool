@@ -5,6 +5,7 @@ __pycache__/
 
 #Tensorflow Logs
 logs/
+Cache/
 
 #idea
 .idea/
