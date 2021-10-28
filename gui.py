@@ -27,7 +27,7 @@ class ImageWidget(QWidget):
         """
         print("Image Preview Updated")
         img = QImage(img.np_array, img.np_array.shape[0], img.np_array.shape[1],
-                     QImage.Format.Format_Mono)
+                     QImage.Format.Format_Grayscale8)
         self.pix_map = QPixmap(img)
         self.label.setPixmap(self.pix_map)
 
