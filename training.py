@@ -131,13 +131,15 @@ class ModelBaseClass(NNModel):
         np_array_tags = [self.multi_hot_from_tag_set(set(tag)) for _, tag in self._training_set]
         training_set_imgs = []
         training_set_tags = []
-        while len(training_set_imgs) < self._min_training_set_size:
-            print(len(training_set_imgs))
-            a = random.randint(0, len(np_array_tags)-1)
-            b = random.randint(0, len(np_array_tags)-1)
-            pct = random.random()
-            training_set_imgs.append(self.mix(np_array_imgs[a], np_array_imgs[b], pct))
-            training_set_tags.append(self.interp(np_array_tags[a], np_array_tags[b], pct))
+        # while len(training_set_imgs) < self._min_training_set_size:
+        #     print(len(training_set_imgs))
+        #     a = random.randint(0, len(np_array_tags)-1)
+        #     b = random.randint(0, len(np_array_tags)-1)
+        #     pct = random.random()
+        #     training_set_imgs.append(self.mix(np_array_imgs[a], np_array_imgs[b], pct))
+        #     training_set_tags.append(self.interp(np_array_tags[a], np_array_tags[b], pct))
+        training_set_tags = np_array_tags
+        training_set_imgs = np_array_imgs
 
         test_size = (len(training_set_imgs) * self._percent_validation) // 100
         test_size -= 1
