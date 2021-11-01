@@ -60,6 +60,7 @@ class TrainingController(Controller):
         print(f"{len(training_set)} images for training")
         self.model: NNModel = ImageClassifierV01(["duke"], training_set)
         self.model.fit_model(1000)
+        self.model.attach(lambda _, x=self: x.dispatch_update("model"), "model")
         self.current_image = ImageData(self.image_tagger.get_next_image())
 
         # GUI Objects
@@ -79,6 +80,10 @@ class TrainingController(Controller):
         self.next_img_button = QPushButton()
         self.next_img_button.setText("Next Image")
         self.next_img_button.pressed.connect(self.next_button_pressed)
+
+        self.save_tags_button = QPushButton()
+        self.save_tags_button.setText("Set Tags")
+        self.save_tags_button.pressed.connect(self.save_tags_button_pressed)
 
         # Dialogs
         self.file_save_dialog = QFileDialog()
@@ -111,6 +116,7 @@ class TrainingController(Controller):
         self.layout.addWidget(self.model_preview, 3, 3)
         self.layout.addWidget(self.input_text_box, 5, 1, 1, 3)
         self.layout.addWidget(self.next_img_button, 7, 1)
+        self.layout.addWidget(self.save_tags_button, 7, 3)
 
     def layout_menu_bar(self):
         """Class method for specifying the layout of menu bar.
@@ -150,6 +156,15 @@ class TrainingController(Controller):
         """
         self.set_current_image(self.image_tagger.get_next_image())
         self.fit_model()
+
+    def save_tags_button_pressed(self):
+        """Called when the next button is pressed in the GUI
+
+        :return: None.
+        """
+        tokens = self.input_text_box.toPlainText().split(",")
+        self.image_tagger.tag_image(self.current_image.file_path.name, tokens)
+        self.set_current_image(self.image_tagger.get_next_image())
 
     def save_nn_button_pressed(self):
         """Called when the save nn button is pressed in the GUI.
