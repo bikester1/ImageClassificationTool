@@ -1,6 +1,5 @@
 """This module is for holding different neural networks and their logic."""
 import datetime
-import random
 from abc import abstractmethod
 
 import numpy as np
@@ -21,6 +20,7 @@ class NNModel(Observable):
     can be easily saved to disk and loaded on demand.
     """
 
+    # pylint: disable=super-init-not-called
     def __init__(self):
         super().__default_init_implementation__()
 
@@ -60,11 +60,13 @@ class NNModel(Observable):
         """
 
 
+#pylint: disable=too-many-instance-attributes
 class ModelBaseClass(NNModel):
     """Base implementation of the model interface.
     Most Models will fall in line with this implementation and
     should be purely for configuration
     """
+    #pylint: disable=too-many-arguments
     def __init__(self, output_tags: list[str], image_set: list[(ImageData, list[str])],
                  percent_validation=20, model: Sequential = Sequential(),
                  min_training_set_size=5000):
@@ -100,11 +102,13 @@ class ModelBaseClass(NNModel):
         return np.array([int(tag in tags) for tag in self.output_tags])
 
     @staticmethod
-    def mix(a: np.array, b: np.array, pct_a: float) -> np.array:
-        ret_arr = np.zeros(shape=np.shape(a))
-        rand = np.random.random(size=np.shape(a)) - pct_a
+    def mix(array_a: np.array, array_b: np.array, pct_a: float) -> np.array:
+        """Mixes two arrays representing images by randomly taking a percentage of on images
+        pixels over the other."""
+        ret_arr = np.zeros(shape=np.shape(array_a))
+        rand = np.random.random(size=np.shape(array_a)) - pct_a
         rand = np.ceil(rand)
-        for x, y, out, r in np.nditer([a, b, ret_arr, rand],
+        for item_a, item_b, out, item_rand in np.nditer([array_a, array_b, ret_arr, rand],
                                       flags=["external_loop", "refs_ok"],
                                       op_flags=[
                                           ["readonly"],
@@ -112,14 +116,16 @@ class ModelBaseClass(NNModel):
                                           ["writeonly"],
                                           ["readonly"],
                                       ]):
-            out[...] = x * r + y * (1 - r)
+            out[...] = item_a * item_rand + item_b * (1 - item_rand)
         return ret_arr
 
     @staticmethod
-    def interp(a: list, b: list, pct_a: float) -> np.array:
+    def interp(array_a: list, array_b: list, pct_a: float) -> np.array:
+        """Interpolates between two 1 dimensional lists. Mostly used to combine expected model
+        outputs."""
         ret_arr = []
-        for x in range(len(a)):
-            ret_arr.append(a[x] * pct_a + b[x] * (1 - pct_a))
+        for ind, _ in enumerate(array_a):
+            ret_arr.append(array_a[ind] * pct_a + array_b[ind] * (1 - pct_a))
         return ret_arr
 
     @updates("imgs_train", "tags_train", "imgs_validation", "tags_validation")
