@@ -2,7 +2,8 @@
 This module contains all of the custom GUI widget elements.
 """
 from PyQt6.QtGui import QPixmap, QImage
-from PyQt6.QtWidgets import QWidget, QLabel, QHBoxLayout, QTextEdit, QFormLayout
+from PyQt6.QtWidgets import QWidget, QLabel, QHBoxLayout, QTextEdit, QFormLayout, QLineEdit, \
+    QPushButton
 
 from data import ImageData
 from training import NNModel
@@ -49,12 +50,29 @@ class ModelWidget(QWidget):
         self.prediction_output = QTextEdit()
         self.prediction_output.setDisabled(True)
 
+        self.epoch_selector = QLineEdit()
+        self.epoch_selector.setInputMask("9999999")
+        self.epoch_selector.setText("100")
+        self.train_button = QPushButton()
+        self.train_button.pressed.connect(self.train_model_button_pressed)
+        self.train_button.setText("Train Model")
+
         self.setBaseSize(400, 400)
 
         self.setLayout(QFormLayout())
-        self.layout().addRow("Predicted Values", self.prediction_output)
+        self.layout_widgets()
 
         self.current_image_updated(self.current_image)
+
+    def layout_widgets(self):
+        """Lays out all the widgets.
+
+        :return: None
+        """
+        lo = self.layout()
+        lo.addRow("Predicted Values", self.prediction_output)
+        lo.addRow("Number of Training Epochs", self.epoch_selector)
+        lo.addRow("Train Model", self.train_button)
 
     @property
     def update_callbacks(self) -> dict[str:callable]:
@@ -97,3 +115,12 @@ class ModelWidget(QWidget):
 
         out = "".join(out)
         self.prediction_output.setText(out)
+
+    def train_model_button_pressed(self):
+        """Called when the train model button is pressed. Trains for the number of epochs listed
+        in the epoch selector.
+
+        :return: None
+        """
+        epochs = int(self.epoch_selector.text())
+        self.model.fit_model(epochs)
