@@ -8,6 +8,7 @@ import tensorflow as tf
 from tensorflow.keras.activations import relu, sigmoid
 from tensorflow import optimizers, losses
 from tensorflow.keras import Sequential, layers
+from tensorflow import config
 
 from data import ImageData
 from protocols import Observable, updates
@@ -162,6 +163,8 @@ class ModelBaseClass(NNModel):
 
     @updates("model")
     def fit_model(self, epochs: int = 1):
+        gpus = config.list_physical_devices("GPU")
+        print(gpus)
         if len(self._imgs_train) == 0:
             return
 
