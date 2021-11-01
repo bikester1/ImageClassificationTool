@@ -59,7 +59,7 @@ class TrainingController(Controller):
         ]
         print(f"{len(training_set)} images for training")
         self.model: NNModel = ImageClassifierV01(["duke"], training_set)
-        self.model.fit_model(1000)
+        self.model.fit_model(1)
         self.model.attach(lambda _, x=self: x.dispatch_update("model"), "model")
         self.current_image = ImageData(self.image_tagger.get_next_image())
 
