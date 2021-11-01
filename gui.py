@@ -76,8 +76,8 @@ class ModelWidget(QWidget):
 
     @property
     def update_callbacks(self) -> dict[str:callable]:
-        """
-        returns list of callbacks that can be used to register updates.
+        """Returns list of callbacks that can be used to register updates.
+
         :return: dictionary of callbacks by variable name
         """
         return {
@@ -86,8 +86,8 @@ class ModelWidget(QWidget):
         }
 
     def model_updated(self, model: NNModel):
-        """
-        Call this method when the model this widget has gets updated.
+        """Call this method when the model this widget has gets updated.
+
         :param model: Always provide the current model in the event that it is changed.
         :return: None.
         """
@@ -95,8 +95,8 @@ class ModelWidget(QWidget):
         self.update_widget()
 
     def current_image_updated(self, img: ImageData):
-        """
-        Call this method when the current_image this widget has gets updated.
+        """Call this method when the current_image this widget has gets updated.
+
         :param img: Always provide the current image in the event that it is changed.
         :return: None.
         """
@@ -104,8 +104,8 @@ class ModelWidget(QWidget):
         self.update_widget()
 
     def update_widget(self):
-        """
-        Called to update the widget after variables are set.
+        """Called to update the widget after variables are set.
+
         :return: None.
         """
         text_dict = self.model.single_prediction(self.current_image)
