@@ -15,7 +15,7 @@ class ImageTagging:
         self.all_images = HashedImages().all_hashed_files
         self.image_iter = self.all_images.__iter__()
         self.tagged_images = {}
-        self.load_tags()
+        self._load_tags()
         self.current_image = Path()
 
         self.tag_counts = Counter([tag for fil_name, dat in self.tagged_images.items()
@@ -69,7 +69,7 @@ class ImageTagging:
         """
         return [fil for fil in self.all_images if fil.name in file_names]
 
-    def load_tags(self):
+    def _load_tags(self):
         """Loads tags from JSON file."""
         try:
             self.tagged_images = json.load(self.json_file)
@@ -106,3 +106,14 @@ class ImageTagging:
         }
         self.tagged_images[img_name] = img_dict
         self.save_tags()
+
+    def file_tags(self, path: Path) -> list[str]:
+        """This method takes a path and gives a list of that files tags.
+
+        :param path: Path to file for which to find tags
+        :return: List of tags associated with the given file
+        """
+        return self.tagged_images[path.name]["Tags"]
+
+
+tagging = ImageTagging()
