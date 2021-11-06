@@ -5,8 +5,9 @@ from functools import cache
 from hashlib import sha256
 from pathlib import Path
 from typing import Union
+from tempfile import TemporaryFile
 
-from PIL.Image import Image
+import PIL.Image
 from PIL.ImageStat import Stat
 from wand import image as wand_image
 
@@ -26,7 +27,7 @@ def hash_from_file_name(item: Path):
     return hash_str
 
 
-def hash_video(area: Path) -> bytearray:
+def hash_video(area: Path, _: int) -> bytearray:
     """Returns hash of a video file"""
     area = area.open("rb")
     read_bytes: bytes = area.read(1024)
@@ -34,24 +35,21 @@ def hash_video(area: Path) -> bytearray:
     return bytearray(hash_str.digest())
 
 
-def png_of_heic(heic_file: Path) -> Path:
+def png_of_heic(heic_file: Path) -> PIL.Image.Image:
     """Creates and returns a PNG version of an HEIC file"""
     path = str(heic_file)
-    png_file = Path(path + ".png")
-
-    if png_file.exists():
-        return png_file
+    png_file = TemporaryFile()
 
     with wand_image.Image(filename=path) as img:
         print(path + ": converting....")
         img.format = 'png'
-        img.save(filename=(path + ".png"))
+        img.save(file=png_file)
         print(path + ": converted")
 
-    return png_file
+    return PIL.Image.open(png_file)
 
 
-def hash_heic(area: Union[Image, Path], depth: int) -> bytearray:
+def hash_heic(area: Union[PIL.Image.Image, Path], depth: int) -> bytearray:
     """Hash function of HEIC"""
     if isinstance(area, Path):
         png_file = png_of_heic(area)
@@ -60,14 +58,16 @@ def hash_heic(area: Union[Image, Path], depth: int) -> bytearray:
 
     ret_val = hash_helper(png_file, depth)
 
-    os.remove(png_file)
+    png_file.close()
     return ret_val
 
 
 def hash_helper(area: Path, depth: int) -> Union[None, bytearray]:
     """Recursively hash to the desired depth."""
-    path = area
-    area = Image.open(path)
+    path = None
+    if isinstance(area, Path):
+        path = area
+        area = PIL.Image.open(area)
     byte_array = bytearray()
 
     if depth == 0:
@@ -129,17 +129,11 @@ class HashedImages:
         self.all_hashed_files: list[Path] = self._get_files_rec(self._root_folder)
         print(len(self.all_hashed_files))
 
-    @cache
-    def hash_and_size_list(self) -> dict:
+    def hash_and_size_list(self) -> dict[str, set[int]]:
         """Returns a dictionary with the file sizes as values and hashes as keys. Allows
         collisions to be found and resolved."""
-        ret_dict = {}
-        for file in self.all_hashed_files:
-            hash_string = self.hash_from_file_name(file)
-            if hash_string not in ret_dict:
-                ret_dict[hash_string] = set()
-
-            ret_dict[hash_string].add(file.stat().st_size)
+        fil: Path
+        ret_dict = {(key, {fil.stat().st_size for fil in value}) for key, value in self.hashes}
         return ret_dict
 
     def _get_files_rec(self, path: Path) -> list:
@@ -159,3 +153,31 @@ class HashedImages:
         if file.name.find("(") > 0:
             return re.sub(r" \(\d*\)", "", file.stem)
         return file.stem
+
+    @staticmethod
+    def is_image(file: Path):
+        return strategy_map[file.suffix] is not hash_video
+
+    @staticmethod
+    def deep_hash(file: Path):
+        """Returns a deeper hash of an image for comparison purposes."""
+        suffix = file.suffix
+        hash_strategy = strategy_map[suffix]
+        return hash_strategy(file, 5)
+
+    @cache
+    def hashes(self) -> dict[str, list[Path]]:
+        """A dictionary of hashes and their paths"""
+        ret_dict = {}
+        for file in self.all_hashed_files:
+            hash_string = self.hash_from_file_name(file)
+            if hash_string not in ret_dict:
+                ret_dict[hash_string] = []
+
+            ret_dict[hash_string].append(file)
+        return ret_dict
+
+    def all_collisions(self) -> dict[str, list[Path]]:
+        """Returns a list of hashes that may have collisions"""
+        ret_dict = {key: value for key, value in self.hashes().items() if len(value) > 1}
+        return ret_dict

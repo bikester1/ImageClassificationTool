@@ -4,18 +4,19 @@ import re
 from multiprocessing import Pool
 from pathlib import Path
 
-from hashing import strategy_map
+from hashing import strategy_map, HashedImages
 
 source = Path("G:\\Camera Roll to Hash")
 destination = Path("G:\\Hashed Pictures")
+deleted_file_path = Path("G:\\ToBeDeleted")
 
 
-def hash_item(file_path: Path):
+def hash_item(file_path: Path, depth: int = 2):
     """Returns a hash from a path."""
     if file_path.suffix not in strategy_map:
         return None
 
-    hashed = strategy_map[file_path.suffix](file_path, 2).hex("-", 4)
+    hashed = strategy_map[file_path.suffix](file_path, depth).hex("-", 4)
     return hashed
 
 
@@ -42,34 +43,29 @@ def move(file_path: Path, new_file: Path):
         print(f"{exception}")
 
 
+def deep_hash_collisions(collisions: list[Path]) -> None:
+    collision_dictionary: dict[str, list[Path]] = {}
+    for pic in collisions:
+        pic_hash = hash_item(pic, 5)
+        if pic_hash not in collision_dictionary:
+            collision_dictionary[pic_hash] = []
+        collision_dictionary[pic_hash].append(pic)
+
+    value: list[Path]
+    key: str
+    for key, value in collision_dictionary.items():
+        min_size_image = min(value, key=lambda x: x.stat().st_size)
+        value.remove(min_size_image)
+        for img in value:
+            if strategy_map[img.suffix] != strategy_map[".MOV"]:
+                new_path = deleted_file_path.joinpath(f"{img.name}")
+                move(img, new_path)
+
 if __name__ == '__main__':
     pool = Pool(6)
 
     pool.map(hash_and_move, source.iterdir())
 
-    file_dict = {}
-
-    for item in destination.iterdir():
-        if item.name.find("(") > 0:
-            hash_string = re.sub(r" \(\d*\)", "", item.stem)
-            print(hash_string)
-        else:
-            hash_string = item.stem
-            print(hash_string)
-
-        if hash_string not in file_dict:
-            file_dict[hash_string] = []
-
-        file_dict[hash_string].append(item)
-
-    duplicates = [lis for lis in file_dict.values() if len(lis) > 1]
-    path: Path
-    for dup in duplicates:
-        size_set = set()
-        for path in dup:
-            if path.stat().st_size in size_set:
-                path.rename(f"G:\\ToBeDeleted\\{path.name}")
-            else:
-                size_set.add(path.stat().st_size)
-
-    print(duplicates)
+    hash_structure = HashedImages()
+    collisions = hash_structure.all_collisions()
+    pool.map(deep_hash_collisions, collisions.values())
