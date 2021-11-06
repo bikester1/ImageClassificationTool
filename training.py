@@ -2,12 +2,19 @@
 import datetime
 from abc import abstractmethod
 
+import cachetools
+import keras
 import numpy as np
 import tensorflow as tf
+from keras.activations import gelu
 from tensorflow.keras.activations import relu, sigmoid
 from tensorflow import optimizers, losses
 from tensorflow.keras import Sequential, layers
-from tensorflow import config
+from tensorflow.keras.regularizers import L2, L1
+from tensorflow.keras.initializers import VarianceScaling
+from tensorflow import random
+from tensorflow import math as tf_math
+
 
 from data import ImageData
 from protocols import Observable, updates
@@ -134,8 +141,22 @@ class ModelBaseClass(NNModel):
 
         :return: None.
         """
-        np_array_imgs = [img_dat.np_array / 255 for img_dat, tag in self._training_set]
-        np_array_tags = [self.multi_hot_from_tag_set(set(tag)) for _, tag in self._training_set]
+        np_array_imgs = random.shuffle([
+            img_dat.np_array / 255
+            for img_dat, tag in self._training_set
+        ], 15)
+        np_array_tags = random.shuffle([
+            self.multi_hot_from_tag_set(set(tag))
+            for _, tag in self._training_set
+        ], 15)
+        # np_array_imgs = [
+        #     img_dat.np_array / 255
+        #     for img_dat, tag in self._training_set
+        # ]
+        # np_array_tags = [
+        #     self.multi_hot_from_tag_set(set(tag))
+        #     for _, tag in self._training_set
+        # ]
         training_set_imgs = []
         training_set_tags = []
         # while len(training_set_imgs) < self._min_training_set_size:
@@ -150,8 +171,11 @@ class ModelBaseClass(NNModel):
 
         test_size = (len(training_set_imgs) * self._percent_validation) // 100
         test_size -= 1
+        #test_size = len(training_set_imgs) - 2
         self._imgs_train = np.array(training_set_imgs[:-test_size])
         self._tags_train = np.array(training_set_tags[:-test_size], dtype=np.float32)
+        print(self._tags_train.shape)
+        print(self._imgs_train.shape)
 
         self._imgs_validation = np.array(training_set_imgs[-test_size:])
         self._tags_validation = np.array(training_set_tags[-test_size:], dtype=np.float32)
@@ -169,8 +193,6 @@ class ModelBaseClass(NNModel):
 
     @updates("model")
     def fit_model(self, epochs: int = 1):
-        gpus = config.list_physical_devices("GPU")
-        print(gpus)
         if len(self._imgs_train) == 0:
             return
 
@@ -182,12 +204,21 @@ class ModelBaseClass(NNModel):
         history = self.model.fit(
             self._imgs_train,
             self._tags_train,
-            batch_size=100,
+            batch_size=16,
             epochs=epochs,
             validation_data=validation_data,
+            shuffle=True,
         )
-        self._model_fit_history.append(history)
-        self.print_weights()
+
+    def single_prediction_array(self, array: np.array):
+        x_pred = np.array([array])
+        predictions = self.model.predict(x_pred)
+        out = {}
+        for tag, pred in zip(self.output_tags, predictions[0]):
+            #print(f"{tag}: {pred}")
+            out[tag] = pred
+
+        return out
 
     def single_prediction(self, img: ImageData):
         x_pred = np.array([img.np_array/255])
@@ -206,9 +237,28 @@ class ModelBaseClass(NNModel):
     def load_model(self, file_path: str):
         self.model = tf.keras.models.load_model(file_path)
 
+    def intermediate_model_from_layer_index(self, layer: int):
+        out_layer = self.model.layers[layer].output
+        return keras.Model(inputs=self.model.input, outputs=out_layer)
+
+    def output_from_layer(self, img: ImageData, layer: int):
+        """Takes a model input and then returns the output at the specified layer"""
+        print(self.model.layers)
+        model = self.intermediate_model_from_layer_index(layer)
+        print((img.np_array/255).shape)
+        return model.predict(np.array([img.np_array/255]))
+
 
 class ImageClassifierV01(ModelBaseClass):
     """Model version 1 for image classification."""
+
+    @staticmethod
+    def custom_regularizer(x):
+        std_dev = tf_math.reduce_std(x) - 0.5
+        mean = tf_math.reduce_mean(x) - 0.5
+        loss = (mean * mean) + (std_dev * std_dev)/4
+        return loss
+
     def __init__(self, output_tags: list[str], image_set: list[(ImageData, list[str])],
                  percent_validation=20):
         super().__init__(output_tags, image_set, percent_validation)
@@ -216,60 +266,50 @@ class ImageClassifierV01(ModelBaseClass):
         self.model = Sequential([
             layers.Input(shape=(256, 256, 1)),
             layers.experimental.preprocessing.Normalization(),
-            layers.experimental.preprocessing.RandomFlip('horizontal'),
-            layers.experimental.preprocessing.RandomRotation(0.5),
+            layers.experimental.preprocessing.RandomFlip(),
+            layers.experimental.preprocessing.RandomRotation(0.25),
+            layers.experimental.preprocessing.RandomContrast(0.5),
             layers.Conv2D(
-                10,
+                16,
                 3,
                 strides=1,
                 padding="same",
-                activation=relu,
+                activation=gelu,
+                kernel_initializer=VarianceScaling(),
+                bias_initializer=VarianceScaling(),
+                activity_regularizer=self.custom_regularizer,
+            ),
+            layers.MaxPool2D(8),
+            layers.Conv2D(
+                16,
+                5,
+                strides=3,
+                padding="same",
+                activation=gelu,
+                kernel_initializer=VarianceScaling(),
+                bias_initializer=VarianceScaling(),
+                activity_regularizer=self.custom_regularizer,
             ),
             layers.Conv2D(
-                10,
-                3,
-                strides=1,
+                16,
+                7,
+                strides=3,
                 padding="same",
-                activation=relu,
+                activation=gelu,
+                kernel_initializer=VarianceScaling(),
+                bias_initializer=VarianceScaling(),
+                activity_regularizer=self.custom_regularizer,
             ),
-            layers.MaxPool2D(2),
-            layers.Conv2D(
-                10,
-                3,
-                strides=1,
-                padding="same",
-                activation=relu,
-            ),
-            layers.Conv2D(
-                10,
-                3,
-                strides=1,
-                padding="same",
-                activation=relu,
-            ),
-            layers.MaxPool2D(2),
-            layers.Conv2D(
-                10,
-                3,
-                strides=1,
-                padding="same",
-                activation=relu,
-            ),
-            layers.Conv2D(
-                10,
-                3,
-                strides=1,
-                padding="same",
-                activation=relu,
-            ),
-            layers.MaxPool2D(16),
             layers.Flatten(),
-            layers.Dense(16, activation=relu,),
-            layers.Dense(len(self.output_tags), activation=sigmoid,),
+            #layers.Dense(32, gelu),
+            layers.Dense(
+                len(self.output_tags),
+                activation=sigmoid,
+            ),
         ])
 
         self.model.compile(
-            optimizer=optimizers.Adam(),
+            optimizer=optimizers.Adam(learning_rate=0.001, amsgrad=True, epsilon=0.01),
             loss=losses.BinaryCrossentropy(),
             metrics='binary_crossentropy',
         )
