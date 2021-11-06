@@ -6,6 +6,7 @@ __pycache__/
 #Tensorflow Logs
 logs/
 Cache/
+Datasets/
 
 #idea
 .idea/
