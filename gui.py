@@ -1,6 +1,7 @@
 """
 This module contains all of the custom GUI widget elements.
 """
+import numpy as np
 from PyQt6.QtGui import QPixmap, QImage
 from PyQt6.QtWidgets import QWidget, QLabel, QHBoxLayout, QTextEdit, QFormLayout, QLineEdit, \
     QPushButton
@@ -31,6 +32,33 @@ class ImageWidget(QWidget):
                      QImage.Format.Format_Grayscale8)
         self.pix_map = QPixmap(img)
         self.label.setPixmap(self.pix_map)
+
+
+class ModelFilterVisualization(QWidget):
+
+    def __init__(self, size: int):
+        super().__init__()
+        self.size = size
+        self.labels: list[QLabel] = [QLabel() for _ in range(size)]
+        self.setLayout(QHBoxLayout())
+        self.add_labels_to_layout()
+
+    def add_labels_to_layout(self):
+        layout: QHBoxLayout = self.layout()
+        for label in self.labels:
+            layout.addWidget(label)
+
+    @staticmethod
+    def pix_map_from_array(array: np.array) -> QPixmap:
+        scaled = (array * 255).astype(np.uint8)
+        img = QImage(scaled, array.shape[0], array.shape[1],
+                     QImage.Format.Format_Grayscale8)
+        return QPixmap(img)
+
+    def update_images(self, images: np.array):
+        print(images.shape)
+        for i, label in enumerate(self.labels):
+            label.setPixmap(self.pix_map_from_array(images[0, :, :, i]))
 
 
 class ModelWidget(QWidget):

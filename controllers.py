@@ -11,8 +11,8 @@ from PyQt6.QtWidgets import QMainWindow, QTextEdit, QPushButton, QFileDialog, QM
 from protocols import Observable, updates
 from tagging import ImageTagging
 from data import ImageData
-from gui import ImageWidget, ModelWidget
-from training import NNModel, ImageClassifierV01
+from gui import ImageWidget, ModelWidget, ModelFilterVisualization
+from training import NNModel, ImageClassifierV01, ModelBaseClass
 
 _classT = TypeVar("_classT")
 
@@ -58,7 +58,8 @@ class TrainingController(Controller):
             if fil.name in self.image_tagger.tagged_images
         ]
         print(f"{len(training_set)} images for training")
-        self.model: NNModel = ImageClassifierV01(["duke"], training_set)
+        self.model: ModelBaseClass = ImageClassifierV01(["duke", "sierra", "rex", "dog", "person"],
+                                                 training_set)
         self.model.fit_model(1)
         self.model.attach(lambda _, x=self: x.dispatch_update("model"), "model")
         self.current_image = ImageData(self.image_tagger.get_next_image())
@@ -71,6 +72,14 @@ class TrainingController(Controller):
         self.img_preview = ImageWidget()
         self.img_preview.set_image(self.current_image)
         self.attach(lambda _, x=self: self.img_preview.set_image(x.current_image), "current_image")
+
+        layer = 4
+        self.layer_preview = ModelFilterVisualization(5)
+        self.attach(lambda _, x=self: self.layer_preview.update_images(
+            x.model.output_from_layer(x.current_image, layer)), "model")
+        self.attach(lambda _, x=self: self.layer_preview.update_images(
+            x.model.output_from_layer(x.current_image, layer)), "current_image")
+        self.layer_preview.update_images(self.model.output_from_layer(self.current_image, layer))
 
         self.model_preview = ModelWidget(self.model, self.current_image)
         self.attach(lambda _, x=self: self.model_preview.model_updated(x.model), "model")
@@ -117,6 +126,7 @@ class TrainingController(Controller):
         self.layout.addWidget(self.input_text_box, 5, 1, 1, 3)
         self.layout.addWidget(self.next_img_button, 7, 1)
         self.layout.addWidget(self.save_tags_button, 7, 3)
+        self.layout.addWidget(self.layer_preview, 9, 1, 1, 3)
 
     def layout_menu_bar(self):
         """Class method for specifying the layout of menu bar.
