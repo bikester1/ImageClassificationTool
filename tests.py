@@ -2,7 +2,9 @@
 from pathlib import Path
 from unittest import TestCase
 
-from data import ImageData
+import numpy as np
+
+from data import ImageData, DogDataSet
 from protocols import LazyInitProperty, Observable, updates
 
 
@@ -98,3 +100,12 @@ class ObservableTests(TestCase):
         """Callback is called when an updates method is called."""
         self.obj.updates_count()
         self.assertEqual(self.obj.count, 1)
+
+
+class DogDataSetTests(TestCase):
+
+    def test_data_load(self):
+        self.dataset = DogDataSet()
+        self.dataset._debug = True
+        self.dataset.load_data()
+        print(self.dataset.images_as_np_array.shape)
