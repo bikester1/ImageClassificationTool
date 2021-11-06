@@ -106,7 +106,7 @@ class DataSet(ABC):
 
 
 class DogDataSet(DataSet):
-    """Loads the Dogs dataset and tags"""
+    """Loads the Stanford Dogs Dataset and tags"""
 
     def __init__(self):
         super().__init__()
