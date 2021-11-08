@@ -16,7 +16,7 @@ from tensorflow import random
 from tensorflow import math as tf_math
 
 
-from data import ImageData
+from data import ImageData, DataSet
 from protocols import Observable, updates
 
 
@@ -74,14 +74,14 @@ class ModelBaseClass(NNModel):
     should be purely for configuration
     """
     #pylint: disable=too-many-arguments
-    def __init__(self, output_tags: list[str], image_set: list[(ImageData, list[str])],
+    def __init__(self, output_tags: list[str], training_set: DataSet,
                  percent_validation=20, model: Sequential = Sequential(),
                  min_training_set_size=5000):
         super().__init__()
         self.output_tags = output_tags
 
         # Training Sets
-        self._training_set = image_set
+        self._training_set = training_set
         self._percent_validation = percent_validation
         self._imgs_train = np.array([])
         self._imgs_validation = np.array([])
@@ -141,22 +141,19 @@ class ModelBaseClass(NNModel):
 
         :return: None.
         """
-        np_array_imgs = random.shuffle([
-            img_dat.np_array / 255
-            for img_dat, tag in self._training_set
-        ], 15)
-        np_array_tags = random.shuffle([
-            self.multi_hot_from_tag_set(set(tag))
-            for _, tag in self._training_set
-        ], 15)
-        # np_array_imgs = [
+        # np_array_imgs = random.shuffle([
         #     img_dat.np_array / 255
         #     for img_dat, tag in self._training_set
-        # ]
-        # np_array_tags = [
+        # ], 15)
+        # np_array_tags = random.shuffle([
         #     self.multi_hot_from_tag_set(set(tag))
         #     for _, tag in self._training_set
-        # ]
+        # ], 15)
+        np_array_imgs = self._training_set.images_as_np_array
+        np_array_tags = [
+            self.multi_hot_from_tag_set(set(tag))
+            for tag in self._training_set.labels
+        ]
         training_set_imgs = []
         training_set_tags = []
         # while len(training_set_imgs) < self._min_training_set_size:
@@ -254,23 +251,23 @@ class ImageClassifierV01(ModelBaseClass):
 
     @staticmethod
     def custom_regularizer(x):
-        std_dev = tf_math.reduce_std(x) - 0.5
-        mean = tf_math.reduce_mean(x) - 0.5
-        loss = (mean * mean) + (std_dev * std_dev)/4
+        std_dev = (tf_math.reduce_std(x) - 1)
+        mean = tf_math.reduce_mean(x) - 0.25
+        loss = ((mean * mean * 2) + (std_dev * std_dev))/100
         return loss
 
-    def __init__(self, output_tags: list[str], image_set: list[(ImageData, list[str])],
+    def __init__(self, output_tags: list[str], training_set: DataSet,
                  percent_validation=20):
-        super().__init__(output_tags, image_set, percent_validation)
+        super().__init__(output_tags, training_set, percent_validation)
 
         self.model = Sequential([
             layers.Input(shape=(256, 256, 1)),
             layers.experimental.preprocessing.Normalization(),
             layers.experimental.preprocessing.RandomFlip(),
             layers.experimental.preprocessing.RandomRotation(0.25),
-            layers.experimental.preprocessing.RandomContrast(0.5),
+            #layers.experimental.preprocessing.RandomContrast(0.5),
             layers.Conv2D(
-                16,
+                32,
                 3,
                 strides=1,
                 padding="same",
@@ -279,9 +276,20 @@ class ImageClassifierV01(ModelBaseClass):
                 bias_initializer=VarianceScaling(),
                 activity_regularizer=self.custom_regularizer,
             ),
-            layers.MaxPool2D(8),
+            layers.MaxPool2D(2),
             layers.Conv2D(
-                16,
+                32,
+                3,
+                strides=1,
+                padding="same",
+                activation=gelu,
+                kernel_initializer=VarianceScaling(),
+                bias_initializer=VarianceScaling(),
+                activity_regularizer=self.custom_regularizer,
+            ),
+            layers.MaxPool2D(2),
+            layers.Conv2D(
+                32,
                 5,
                 strides=3,
                 padding="same",
@@ -290,9 +298,10 @@ class ImageClassifierV01(ModelBaseClass):
                 bias_initializer=VarianceScaling(),
                 activity_regularizer=self.custom_regularizer,
             ),
+            layers.MaxPool2D(2),
             layers.Conv2D(
-                16,
-                7,
+                32,
+                5,
                 strides=3,
                 padding="same",
                 activation=gelu,
