@@ -10,7 +10,7 @@ from PyQt6.QtWidgets import QMainWindow, QTextEdit, QPushButton, QFileDialog, QM
 
 from protocols import Observable, updates
 from tagging import ImageTagging
-from data import ImageData
+from data import ImageData, DogDataSet, PersonalPicturesDataSet
 from gui import ImageWidget, ModelWidget, ModelFilterVisualization
 from training import NNModel, ImageClassifierV01, ModelBaseClass
 
@@ -57,9 +57,16 @@ class TrainingController(Controller):
             for fil in self.image_tagger.all_images
             if fil.name in self.image_tagger.tagged_images
         ]
+        training_set = PersonalPicturesDataSet()
+        training_set.load_data()
+        dog_set = DogDataSet()
+        dog_set.load_data(load_arrays=False)
+        dog_set.shuffle_array()
+        dog_set = dog_set[:10000]
+        dog_set._load_arrays()
+        labels = {label for img in dog_set.labels for label in img}
         print(f"{len(training_set)} images for training")
-        self.model: ModelBaseClass = ImageClassifierV01(["duke", "sierra", "rex", "dog", "person"],
-                                                 training_set)
+        self.model: ModelBaseClass = ImageClassifierV01(list(labels), dog_set)
         self.model.fit_model(1)
         self.model.attach(lambda _, x=self: x.dispatch_update("model"), "model")
         self.current_image = ImageData(self.image_tagger.get_next_image())
