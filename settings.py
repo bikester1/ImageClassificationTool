@@ -16,10 +16,18 @@ class SettingController:
 
         if not self.settings_file.exists():
             with open(self.settings_file, "x") as new_file:
-                new_file.write("{}")
+                json.dump(self.defaults(), new_file)
 
         with open(self.settings_file, "r+") as fp:
-            self.json = json.load(fp)
+            self.json: dict = json.load(fp)
+            missing_settings = set(self.defaults()).difference(set(self.json.keys()))
+
+            for setting in missing_settings:
+                self.json[setting] = self.defaults()[setting]
+
+            fp.truncate(0)
+            fp.seek(0)
+            json.dump(self.json, fp)
 
     def set_setting(self, setting: str, value: any):
         self.json[setting] = value
@@ -28,3 +36,9 @@ class SettingController:
 
     def get_setting(self, setting) -> any:
         return self.json[setting]
+
+    def defaults(self):
+        return {
+            "hashed_images_root": "C:\\",
+            "image_source_folder": "C:\\",
+        }

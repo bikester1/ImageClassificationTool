@@ -8,11 +8,13 @@ from hashing import HashedImages
 
 class ImageTagging:
     """Tagging object used to access tagged image sets from a JSON file."""
-    def __init__(self):
-        self.json_file_path = Path("G:\\saved_tags.json")
+    def __init__(self, root_folder: Path):
+        self.json_file_path = Path(f"{root_folder}\\saved_tags.json")
+        if not self.json_file_path.exists():
+            open(self.json_file_path, "x").close()
         self.json_file = open(self.json_file_path, "a+", encoding="utf-8")
         self.json_file.seek(0)
-        self.all_images = HashedImages().all_hashed_files
+        self.all_images = HashedImages(root_folder).all_hashed_files
         self.image_iter = self.all_images.__iter__()
         self.tagged_images = {}
         self.load_tags()

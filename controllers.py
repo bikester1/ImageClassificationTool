@@ -51,8 +51,9 @@ class TrainingController(Controller):
     def __init__(self):
         super().__init__()
         # Business Logic Objects
-        self.image_tagger = ImageTagging()
         self.settings_controller = SettingController()
+        self.image_tagger = ImageTagging(Path(self.settings_controller.get_setting("hashed_images_root")))
+
 
         training_set = [
             (ImageData(fil), self.image_tagger.tagged_images[fil.name]["Tags"])
@@ -203,5 +204,8 @@ class TrainingController(Controller):
         # TODO: Implement Settings file
 
     def set_root_directory_button_pressed(self):
-        pass
-        # TODO: Implement Settings file
+        """Called when the set root directory is pressed in the GUI Only opens the dialog menu.
+
+        :return: None.
+        """
+        self.select_foler.show()

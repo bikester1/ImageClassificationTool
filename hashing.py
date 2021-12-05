@@ -124,7 +124,7 @@ strategy_map = {
 
 class HashedImages:
     """Class used to easily access hashed images."""
-    def __init__(self):
+    def __init__(self, root_folder):
         self._root_folder = Path("G:\\Hashed Pictures")
         self.all_hashed_files: list[Path] = self._get_files_rec(self._root_folder)
         print(len(self.all_hashed_files))
