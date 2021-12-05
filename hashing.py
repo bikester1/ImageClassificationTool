@@ -148,8 +148,9 @@ class HashedImages:
             return [path]
 
         current_files = []
-        for item in path.iterdir():
-            current_files += self._get_files_rec(item)
+        if path.is_dir():
+            for item in path.iterdir():
+                current_files += self._get_files_rec(item)
 
         return current_files
 

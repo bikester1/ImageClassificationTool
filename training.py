@@ -131,7 +131,7 @@ class ModelBaseClass(NNModel):
         np_array_tags = [self.multi_hot_from_tag_set(set(tag)) for _, tag in self._training_set]
         training_set_imgs = []
         training_set_tags = []
-        while len(training_set_imgs) < self._min_training_set_size:
+        while len(training_set_imgs) < self._min_training_set_size and len(training_set_imgs) > 0:
             print(len(training_set_imgs))
             a = random.randint(0, len(np_array_tags)-1)
             b = random.randint(0, len(np_array_tags)-1)
@@ -178,7 +178,10 @@ class ModelBaseClass(NNModel):
         self._model_fit_history.append(history)
         self.print_weights()
 
-    def single_prediction(self, img: ImageData):
+    def single_prediction(self, img: ImageData) -> dict:
+        if img is None:
+            return {}
+
         x_pred = np.array([img.np_array/255])
         predictions = self.model.predict(x_pred)
         out = {}

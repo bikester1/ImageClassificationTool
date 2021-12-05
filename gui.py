@@ -25,6 +25,9 @@ class ImageWidget(QWidget):
         :param img: image to be previewed
         :return: None.
         """
+        if img is None:
+            return
+
         print("Image Preview Updated")
         img = QImage(img.np_array, img.np_array.shape[0], img.np_array.shape[1],
                      QImage.Format.Format_Grayscale8)

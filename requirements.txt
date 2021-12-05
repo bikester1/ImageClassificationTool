@@ -1,5 +1,6 @@
-tensorflow==2.7.0rc1
+tensorflow==2.7.0
 pylint
 PyQt6
 Pillow
 wand
+

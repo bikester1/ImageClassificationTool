@@ -4,6 +4,7 @@ This module contains controllers which create and manage GUI/Business logic obje
 import warnings
 from pathlib import Path
 from typing import TypeVar, Union
+from settings import SettingController
 
 from PyQt6.QtWidgets import QMainWindow, QTextEdit, QPushButton, QFileDialog, QMenuBar, \
     QGridLayout, QWidget
@@ -51,6 +52,7 @@ class TrainingController(Controller):
         super().__init__()
         # Business Logic Objects
         self.image_tagger = ImageTagging()
+        self.settings_controller = SettingController()
 
         training_set = [
             (ImageData(fil), self.image_tagger.tagged_images[fil.name]["Tags"])
@@ -60,7 +62,11 @@ class TrainingController(Controller):
         print(f"{len(training_set)} images for training")
         self.model: NNModel = ImageClassifierV01(["duke"], training_set)
         self.model.fit_model(1000)
-        self.current_image = ImageData(self.image_tagger.get_next_image())
+
+        try:
+            self.current_image = ImageData(self.image_tagger.get_next_image())
+        except StopIteration:
+            self.current_image = None
 
         # GUI Objects
         self.main_window_widget = QMainWindow()
@@ -89,6 +95,11 @@ class TrainingController(Controller):
         self.file_load_dialog.setAcceptMode(QFileDialog.AcceptMode.AcceptSave)
         self.file_load_dialog.setFileMode(QFileDialog.FileMode.Directory)
         self.file_load_dialog.fileSelected.connect(self.load_nn)
+        self.select_foler = QFileDialog()
+        self.select_foler.setAcceptMode(QFileDialog.AcceptMode.AcceptSave)
+        self.select_foler.setFileMode(QFileDialog.FileMode.Directory)
+        self.select_foler.fileSelected.connect(self.set_root_directory)
+
 
         self.menu_bar = QMenuBar()
         self.layout_menu_bar()
@@ -120,6 +131,7 @@ class TrainingController(Controller):
         file_menu = self.menu_bar.addMenu("File")
         file_menu.addAction("Save NN", self.save_nn_button_pressed)
         file_menu.addAction("Load NN", self.load_nn_button_pressed)
+        file_menu.addAction("Set Root Directory", self.set_root_directory_button_pressed)
 
         self.main_window_widget.setMenuBar(self.menu_bar)
 
@@ -185,3 +197,11 @@ class TrainingController(Controller):
         file_path = self.file_load_dialog.selectedFiles()[0]
         self.model.load_model(file_path)
         print(f"File Loaded {file_path}")
+
+    def set_root_directory(self):
+        pass
+        # TODO: Implement Settings file
+
+    def set_root_directory_button_pressed(self):
+        pass
+        # TODO: Implement Settings file
